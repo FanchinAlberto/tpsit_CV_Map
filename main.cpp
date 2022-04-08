@@ -36,7 +36,7 @@ int main() {
     studente1.join();
     studente2.join();
     for(const auto& x : dict){
-        cout<< x.first <<  endl;
+        cout<< x.first << " ha ordinato:" << x.second.front() <<  endl;
     }
     
     return 0;
