@@ -7,14 +7,15 @@
 #include <map>
 using namespace std;
 
-mutex m;
+mutex mutex_ordini;
 map<string, list<string>> dict;
 condition_variable cv;
-mutex a;
+unique_lock<mutex> lk(mutex_ordini);
+
 
 void inserisci_ordine(string nome_studente)
 {
-    a.lock();
+    mutex_ordini.lock();
     list<string> orders;
     string input;
     cout << "Ordini di: " << nome_studente << endl;
@@ -27,17 +28,38 @@ void inserisci_ordine(string nome_studente)
         orders.push_back(input);
     }
     dict[nome_studente] = orders;
-    a.unlock();
+    mutex_ordini.unlock();
+}
+
+void invia_ordini(int numero_minimo){
+    
+    cv.wait(lk,[numero_minimo]{
+        return (dict.size() == numero_minimo) ? true : false;
+    } );
+    
+    for(const auto& x : dict){
+        cout<< x.first << " ha ordinato: ";
+        for(const auto& y : x.second){
+            if(y == x.second.back()){
+                cout << y << "." << endl;
+            }
+            else{
+            cout << y << ", ";
+            }
+        }
+    }
+    cv.notify_all();
 }
 
 int main() {
     thread studente1(inserisci_ordine, "Giorgio");
     thread studente2(inserisci_ordine, "Carla");
+    thread studente3(inserisci_ordine, "Bonromeo");
+    thread insegnante(invia_ordini, 3);
     studente1.join();
     studente2.join();
-    for(const auto& x : dict){
-        cout<< x.first << " ha ordinato:" << x.second.front() <<  endl;
-    }
+    studente3.join();
+    insegnante.join();
     
     return 0;
 }
