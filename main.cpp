@@ -29,25 +29,28 @@ void inserisci_ordine(string nome_studente)
     }
     dict[nome_studente] = orders;
     mutex_ordini.unlock();
+    cv.notify_all();
 }
 
 void invia_ordini(int numero_minimo){
     
     cv.wait(lk,[numero_minimo]{
-        return (dict.size() == numero_minimo) ? true : false;
-    } );
-    
+        return (dict.size() == numero_minimo);
+        });
+    cout << "Invio ordini: "<<endl;
     for(const auto& x : dict){
         cout<< x.first << " ha ordinato: ";
         for(const auto& y : x.second){
             if(y == x.second.back()){
                 cout << y << "." << endl;
+                cout << "Prof ha inviato 📦 di " << x.first << " ..." << x.first << " ricevuto"<<endl;
             }
             else{
             cout << y << ", ";
             }
         }
     }
+    cout << "Invio ordini completato!"
     cv.notify_all();
 }
 
